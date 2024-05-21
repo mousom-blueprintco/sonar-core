@@ -1,0 +1,12 @@
+server:
+  env_name: ${APP_ENV:openai}
+
+llm:
+  mode: openai
+
+embedding:
+  mode: openai
+
+openai:
+  api_key: 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
+  model: gpt-3.5-turbo

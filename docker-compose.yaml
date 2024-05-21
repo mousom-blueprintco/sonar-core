@@ -1,0 +1,12 @@
+services:
+  sonar-labs:
+    build:
+      dockerfile: Dockerfile.prod
+    volumes:
+      - ./local_data/:/home/worker/app/local_data
+    ports:
+      - 8001:8080
+    environment:
+      PORT: 8080
+      SONAR_PROFILES: openai
+      PGPT_MODE: openai
