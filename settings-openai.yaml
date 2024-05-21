@@ -8,5 +8,5 @@ embedding:
   mode: openai
 
 openai:
-  api_key: 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
+  api_key: 
   model: gpt-3.5-turbo
