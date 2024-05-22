@@ -2,6 +2,8 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
+from pathlib import Path
+import tempfile
 
 from sonar_labs.server.ingest.ingest_service import IngestService
 from sonar_labs.server.ingest.model import IngestedDoc
@@ -59,6 +61,60 @@ def ingest_file(request: Request, file: UploadFile) -> IngestResponse:
         raise HTTPException(400, "No file name provided")
     ingested_documents = service.ingest_bin_data(file.filename, file.file)
     return IngestResponse(object="list", model="sonar-labs", data=ingested_documents)
+
+@ingest_router.post("/ingest/files", tags=["Ingestions"])
+async def ingest_files(request: Request, files: list[UploadFile]) -> IngestResponse:
+    """Ingests and processes multiple files, storing its chunks to be used as context.
+
+    The context obtained from files is later used in
+    `/chat/completions`, `/completions`, and `/chunks` APIs.
+
+    Most common document
+    formats are supported, but you may be prompted to install an extra dependency to
+    manage a specific file type.
+
+    All files can generate different Documents (for example a PDF generates one Document
+    per page). All Documents IDs are returned in the response, together with the
+    extracted Metadata (which is later used to improve context retrieval). Those IDs
+    can be used to filter the context used to create responses in
+    `/chat/completions`, `/completions`, and `/chunks` APIs.
+    """
+    temp_paths = []
+    try:
+        # Create temporary files for each uploaded file
+        for file in files:
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_file.write(await file.read())
+            temp_path = Path(temp_file.name)
+            temp_paths.append((file.filename, temp_path))
+            temp_file.close()
+
+        service = request.state.injector.get(IngestService)
+
+        # Remove all existing Documents with name identical to all newly uploaded files:
+        file_names = [name for name, _ in temp_paths]
+
+        doc_ids_to_delete = [
+            ingested_document.doc_id 
+            for ingested_document in service.list_ingested() 
+            if ingested_document.doc_metadata and ingested_document.doc_metadata.get("file_name") in file_names
+        ]
+
+        for doc_id in doc_ids_to_delete:
+            service.delete(doc_id)
+
+        if not file_names:
+            raise HTTPException(400, "No file name provided")
+
+        ingested_documents = service.bulk_ingest([(name, path) for name, path in temp_paths])
+        return IngestResponse(object= "list", model= "sonar-labs", data= ingested_documents)
+
+    finally:
+        # Clean up temporary files
+        for _, temp_path in temp_paths:
+            temp_path.unlink()
+
+    
 
 
 @ingest_router.post("/ingest/text", tags=["Ingestion"])
