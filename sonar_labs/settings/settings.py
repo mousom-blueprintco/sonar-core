@@ -159,7 +159,7 @@ class HuggingFaceSettings(BaseModel):
 class EmbeddingSettings(BaseModel):
     mode: Literal["huggingface", "openai", "azopenai", "sagemaker", "ollama", "mock"]
     ingest_mode: Literal["simple", "batch", "parallel", "pipeline"] = Field(
-        "simple",
+        "parallel",
         description=(
             "The ingest mode to use for the embedding engine:\n"
             "If `simple` - ingest files sequentially and one by one. It is the historic behaviour.\n"
@@ -173,7 +173,7 @@ class EmbeddingSettings(BaseModel):
         ),
     )
     count_workers: int = Field(
-        2,
+        4,
         description=(
             "The number of workers to use for file ingestion.\n"
             "In `batch` mode, this is the number of workers used to parse the files.\n"

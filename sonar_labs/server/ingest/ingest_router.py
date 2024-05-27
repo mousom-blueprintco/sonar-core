@@ -40,7 +40,7 @@ def ingest(request: Request, file: UploadFile) -> IngestResponse:
 
 
 @ingest_router.post("/ingest/file", tags=["Ingestion"])
-def ingest_file(request: Request, file: UploadFile) -> IngestResponse:
+async def ingest_file(request: Request, file: UploadFile) -> IngestResponse:
     """Ingests and processes a file, storing its chunks to be used as context.
 
     The context obtained from files is later used in
@@ -57,9 +57,16 @@ def ingest_file(request: Request, file: UploadFile) -> IngestResponse:
     `/chat/completions`, `/completions`, and `/chunks` APIs.
     """
     service = request.state.injector.get(IngestService)
+    project_id = request.headers.get("X-Project-Id", None)
+    user_id = request.headers.get("X-User-Id", None)
+
+    if not project_id or not user_id:
+        raise HTTPException(status_code=400, detail="projectId and userId are required")
+
     if file.filename is None:
-        raise HTTPException(400, "No file name provided")
-    ingested_documents = service.ingest_bin_data(file.filename, file.file)
+        raise HTTPException(status_code=400, detail="No file name provided")
+
+    ingested_documents = service.ingest_bin_data(file.filename, file.file, project_id, user_id)
     return IngestResponse(object="list", model="sonar-labs", data=ingested_documents)
 
 @ingest_router.post("/ingest/files", tags=["Ingestions"])
@@ -80,6 +87,11 @@ async def ingest_files(request: Request, files: list[UploadFile]) -> IngestRespo
     `/chat/completions`, `/completions`, and `/chunks` APIs.
     """
     temp_paths = []
+    project_id = request.headers.get("X-Project-Id", None)
+    user_id = request.headers.get("X-User-Id", None)
+
+    if not project_id or not user_id:
+        raise HTTPException(status_code=400, detail="projectId and userId are required")
     try:
         # Create temporary files for each uploaded file
         for file in files:
@@ -106,7 +118,7 @@ async def ingest_files(request: Request, files: list[UploadFile]) -> IngestRespo
         if not file_names:
             raise HTTPException(400, "No file name provided")
 
-        ingested_documents = service.bulk_ingest([(name, path) for name, path in temp_paths])
+        ingested_documents = service.bulk_ingest([(name, path) for name, path in temp_paths], project_id, user_id)
         return IngestResponse(object= "list", model= "sonar-labs", data= ingested_documents)
 
     finally:
