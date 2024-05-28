@@ -19,24 +19,26 @@ RUN poetry install --extras "ui rerank-sentence-transformers llms-openai embeddi
 FROM base as app
 
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH="$PYTHONPATH:/home/worker/app/sonar_labs/"
 ENV PORT=8080
 EXPOSE 8080
 
 # Prepare a non-root user
-RUN adduser --group worker
-RUN adduser --system --ingroup worker worker
+ARG UID=100
+ARG GID=65534
+RUN adduser --system --gid ${GID} --uid ${UID} --home /home/worker worker
 WORKDIR /home/worker/app
 
-RUN mkdir local_data; chown worker local_data
-RUN mkdir models; chown worker models
-RUN mkdir tiktoken_cache; chown worker tiktoken_cache
+RUN mkdir local_data && chown worker local_data
+RUN mkdir models && chown worker models
+RUN mkdir tiktoken_cache && chown worker tiktoken_cache
 COPY --chown=worker --from=dependencies /home/worker/app/.venv/ .venv
 COPY --chown=worker sonar_labs/ sonar_labs
 COPY --chown=worker fern/ fern
-COPY --chown=worker *.yaml *.md ./
+COPY --chown=worker *.yaml ./
 COPY --chown=worker scripts/ scripts
+COPY --chown=worker Makefile .
 
-ENV PYTHONPATH="$PYTHONPATH:/sonar_labs/"
 
 USER worker
 ENTRYPOINT python -m sonar_labs
