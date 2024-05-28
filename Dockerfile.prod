@@ -14,7 +14,7 @@ FROM base as dependencies
 WORKDIR /home/worker/app
 COPY pyproject.toml poetry.lock ./
 
-RUN poetry install --extras "ui llms-openai embeddings-openai vector-stores-qdrant"
+RUN poetry install --extras "ui rerank-sentence-transformers llms-openai embeddings-openai vector-stores-qdrant"
 
 FROM base as app
 
