@@ -39,4 +39,4 @@ COPY --chown=worker scripts/ scripts
 ENV PYTHONPATH="$PYTHONPATH:/sonar_labs/"
 
 USER worker
-ENTRYPOINT SONAR_PROFILES=openai make run
+ENTRYPOINT python -m sonar_labs
