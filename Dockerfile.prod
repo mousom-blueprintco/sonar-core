@@ -25,8 +25,9 @@ EXPOSE 8080
 
 # Prepare a non-root user
 ARG UID=100
-ARG GID=65534
-RUN adduser --system --gid ${GID} --uid ${UID} --home /home/worker worker
+ARG GID=1000
+RUN addgroup --gid ${GID} worker && \
+    adduser --system --uid ${UID} --gid ${GID} --home /home/worker worker
 WORKDIR /home/worker/app
 
 # Ensure all necessary directories are created and have correct permissions
@@ -34,12 +35,12 @@ RUN mkdir -p local_data/sonar_labs && chown -R worker:worker local_data
 RUN mkdir -p models && chown -R worker:worker models
 RUN mkdir -p tiktoken_cache && chown -R worker:worker tiktoken_cache
 
-COPY --chown=worker --from=dependencies /home/worker/app/.venv/ .venv
-COPY --chown=worker sonar_labs/ sonar_labs
-COPY --chown=worker fern/ fern
-COPY --chown=worker *.yaml ./
-COPY --chown=worker scripts/ scripts
-COPY --chown=worker Makefile .
+COPY --chown=worker:worker --from=dependencies /home/worker/app/.venv/ .venv
+COPY --chown=worker:worker sonar_labs/ sonar_labs
+COPY --chown=worker:worker fern/ fern
+COPY --chown=worker:worker *.yaml ./
+COPY --chown=worker:worker scripts/ scripts
+COPY --chown=worker:worker Makefile .
 
 USER worker
-ENTRYPOINT python -m sonar_labs
+ENTRYPOINT ["python", "-m", "sonar_labs"]
