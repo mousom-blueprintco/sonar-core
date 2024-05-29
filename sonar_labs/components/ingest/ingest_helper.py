@@ -6,7 +6,7 @@ from llama_index.core.readers import StringIterableReader
 from llama_index.core.readers.base import BaseReader
 from llama_index.core.readers.json import JSONReader
 from llama_index.core.schema import Document
-
+from llama_parse import LlamaParse
 logger = logging.getLogger(__name__)
 
 
@@ -92,7 +92,11 @@ class IngestionHelper:
             )
             # Read as a plain text
             string_reader = StringIterableReader()
-            return string_reader.load_data([file_data.read_text()])
+            
+            parser = LlamaParse(api_key="")
+            documents = parser.load_data(file_data)
+            return [documents]
+            # return string_reader.load_data([file_data.read_text()])
 
         logger.debug("Specific reader found for extension=%s", extension)
         return reader_cls().load_data(file_data)
