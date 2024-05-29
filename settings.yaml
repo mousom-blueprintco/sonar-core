@@ -62,7 +62,7 @@ llamacpp:
 embedding:
   # Should be matching the value above in most cases
   mode: huggingface
-  ingest_mode: simple
+  ingest_mode: pipeline
   embed_dim: 384 # 384 is for BAAI/bge-small-en-v1.5
 
 huggingface:
