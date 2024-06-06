@@ -4,7 +4,6 @@ import logging
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 from injector import Injector
 from llama_index.core.callbacks import CallbackManager
 from llama_index.core.callbacks.global_handlers import create_global_handler
@@ -50,8 +49,7 @@ def create_app(root_injector: Injector) -> FastAPI:
             allow_origin_regex=settings.server.cors.allow_origin_regex,
             allow_methods=settings.server.cors.allow_methods,
             allow_headers=settings.server.cors.allow_headers,
-        )
-    app.add_middleware(GZipMiddleware, minimum_size=1000)    
+        )    
 
     if settings.ui.enabled:
         logger.debug("Importing the UI module")
