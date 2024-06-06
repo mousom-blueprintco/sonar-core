@@ -4,6 +4,9 @@ version = "0.6.0"
 description = "SonarLabs RAG"
 authors = ["SonarLabs <support@sonalabs.ai>"]
 
+[tool.poetry.scripts]
+uvicorn = "uvicorn:main"
+
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
 # SonarLabs
@@ -47,7 +50,7 @@ sentence-transformers = {version ="^2.6.1", optional = true}
 
 # Optional UI
 gradio = {version ="^4.19.2", optional = true}
-uvicorn = "^0.29.0"
+
 
 [tool.poetry.extras]
 ui = ["gradio"]
@@ -67,6 +70,8 @@ vector-stores-chroma = ["llama-index-vector-stores-chroma"]
 vector-stores-postgres = ["llama-index-vector-stores-postgres"]
 storage-nodestore-postgres = ["llama-index-storage-docstore-postgres","llama-index-storage-index-store-postgres","psycopg2-binary","asyncpg"]
 rerank-sentence-transformers = ["torch", "sentence-transformers"]
+uvicorn = ["uvicorn"]
+gunicorn = ["gunicorn"]
 
 [tool.poetry.group.dev.dependencies]
 black = "^22"

@@ -83,7 +83,7 @@ class VectorStoreComponent:
                     settings=chroma_settings,
                 )
                 chroma_collection = chroma_client.get_or_create_collection(
-                    "make_this_parameterizable_per_api_call"
+                    "sonar_labs"
                 )  # TODO
 
                 self.vector_store = typing.cast(
@@ -118,7 +118,7 @@ class VectorStoreComponent:
                     VectorStore,
                     QdrantVectorStore(
                         client=client,
-                        collection_name="make_this_parameterizable_per_api_call",
+                        collection_name="sonar_labs",
                     ),  # TODO
                 )
             case _:

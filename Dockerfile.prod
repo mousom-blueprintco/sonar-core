@@ -14,7 +14,8 @@ FROM base as dependencies
 WORKDIR /home/worker/app
 COPY pyproject.toml poetry.lock ./
 
-RUN poetry install --extras "ui rerank-sentence-transformers llms-openai embeddings-openai vector-stores-qdrant"
+RUN poetry install --extras "ui rerank-sentence-transformers llms-openai embeddings-openai vector-stores-qdrant" && \
+    poetry add gunicorn
 
 FROM base as app
 
@@ -43,4 +44,5 @@ COPY --chown=worker:worker scripts/ scripts
 COPY --chown=worker:worker Makefile .
 
 USER worker
-ENTRYPOINT python -m sonar_labs
+
+ENTRYPOINT .venv/bin/gunicorn -b 0.0.0.0:$PORT -w 4 -k uvicorn.workers.UvicornWorker sonar_labs.main:app

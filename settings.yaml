@@ -75,7 +75,9 @@ nodestore:
   database: simple
 
 qdrant:
-  path: local_data/sonar_labs/qdrant
+  # path: local_data/sonar_labs/qdrant
+    url: https://6d650b1f-f6a5-4b54-99b9-70b6d407fe57.us-west-1-0.aws.cloud.qdrant.io:6333
+    api_key: 
 
 postgres:
   host: localhost

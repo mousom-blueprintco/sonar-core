@@ -13,6 +13,7 @@ from gradio.themes.utils.colors import slate  # type: ignore
 from injector import inject, singleton
 from llama_index.core.llms import ChatMessage, ChatResponse, MessageRole
 from pydantic import BaseModel
+import random
 
 from sonar_labs.constants import PROJECT_ROOT_PATH
 from sonar_labs.di import global_injector
@@ -49,7 +50,6 @@ class Source(BaseModel):
     @staticmethod
     def curate_sources(sources: list[Chunk]) -> list["Source"]:
         curated_sources = []
-
         for chunk in sources:
             doc_metadata = chunk.document.doc_metadata
 
@@ -251,7 +251,7 @@ class SonarLabsUI:
             for doc_id in doc_ids_to_delete:
                 self._ingest_service.delete(doc_id)
 
-        self._ingest_service.bulk_ingest([(str(path.name), path) for path in paths])
+        self._ingest_service.bulk_ingest([(str(path.name), path) for path in paths], random.randint(0,200), random.randint(0,100))
 
     def _delete_all_files(self) -> Any:
         ingested_files = self._ingest_service.list_ingested()
