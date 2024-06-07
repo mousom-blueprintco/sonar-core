@@ -42,7 +42,7 @@ dev:
 	PYTHONUNBUFFERED=1 SONAR_PROFILES=local poetry run python -m uvicorn sonar_labs.main:app --reload --port 8001
 
 prod:
-	PYTHONUNBUFFERED=1 SONAR_PROFILES=openai poetry run python -m uvicorn sonar_labs.main:app --workers 4 --port 8001
+	PYTHONUNBUFFERED=1 SONAR_PROFILES=openai poetry run python -m uvicorn sonar_labs.main:app --workers 2 --port 8001
 
 ########################################################################################################################
 # Misc
