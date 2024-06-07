@@ -5,7 +5,7 @@ description = "SonarLabs RAG"
 authors = ["SonarLabs <support@sonalabs.ai>"]
 
 [tool.poetry.scripts]
-uvicorn = "uvicorn:main"
+start = "sonar_labs.main:start"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
