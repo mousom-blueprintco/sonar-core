@@ -30,6 +30,8 @@ RUN addgroup --gid ${GID} worker && \
     adduser --system --uid ${UID} --gid ${GID} --home /home/worker worker
 WORKDIR /home/worker/app
 
+RUN chmod -R 777 /home/worker/app
+
 # Ensure all necessary directories are created and have correct permissions
 RUN mkdir -p local_data/sonar_labs && chown -R worker:worker local_data
 RUN mkdir -p models && chown -R worker:worker models
