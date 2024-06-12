@@ -8,6 +8,7 @@ from llama_index.core.vector_stores.types import (
     MetadataFilter,
     MetadataFilters,
     VectorStore,
+    FilterOperator
 )
 
 from sonar_labs.open_ai.extensions.context_filter import ContextFilter
@@ -20,14 +21,14 @@ logger = logging.getLogger(__name__)
 def _doc_id_metadata_filter(
     context_filter: ContextFilter | None,
 ) -> MetadataFilters:
-    filters = MetadataFilters(filters=[], condition=FilterCondition.OR)
+    filters = MetadataFilters(filters=[], condition=FilterCondition.AND)
 
     if context_filter is not None and context_filter.docs_ids is not None:
         for doc_id in context_filter.docs_ids:
             filters.filters.append(MetadataFilter(key="doc_id", value=doc_id))
     if context_filter is not None and context_filter.user_id is not None and context_filter.project_id is not None:
-        filters.filters.append(MetadataFilter(key="user_id", value=context_filter.user_id))
-        filters.filters.append(MetadataFilter(key="project_id", value=context_filter.project_id))                
+        filters.filters.append(MetadataFilter(key="user_id", value=context_filter.user_id, operator=FilterOperator.EQ))
+        filters.filters.append(MetadataFilter(key="project_id", value=context_filter.project_id, operator=FilterOperator.EQ))                
 
     return filters
 
