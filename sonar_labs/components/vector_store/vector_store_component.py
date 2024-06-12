@@ -25,6 +25,9 @@ def _doc_id_metadata_filter(
     if context_filter is not None and context_filter.docs_ids is not None:
         for doc_id in context_filter.docs_ids:
             filters.filters.append(MetadataFilter(key="doc_id", value=doc_id))
+    if context_filter is not None and context_filter.user_id is not None and context_filter.project_id is not None:
+        filters.filters.append(MetadataFilter(key="user_id", value=context_filter.user_id))
+        filters.filters.append(MetadataFilter(key="project_id", value=context_filter.project_id))                
 
     return filters
 
@@ -141,7 +144,7 @@ class VectorStoreComponent:
             doc_ids=context_filter.docs_ids if context_filter else None,
             filters=(
                 _doc_id_metadata_filter(context_filter)
-                if self.settings.vectorstore.database != "qdrant"
+                if context_filter and not context_filter.docs_ids
                 else None
             ),
         )

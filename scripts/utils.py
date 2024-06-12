@@ -111,7 +111,7 @@ class Chroma:
 
 class Qdrant:
     COLLECTION = (
-        "make_this_parameterizable_per_api_call"  # ?! see vector_store_component.py
+        "sonar_labs"  # ?! see vector_store_component.py
     )
 
     def __init__(self) -> None:

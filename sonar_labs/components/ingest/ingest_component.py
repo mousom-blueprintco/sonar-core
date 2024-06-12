@@ -258,12 +258,12 @@ class ParallelizedIngestComponent(BaseIngestComponentWithIndex):
             processes=self.count_workers
         )
 
-    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+    def ingest(self, file_name: str, file_data: Path,  project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
         logger.info("Ingesting file_name=%s", file_name)
         # Running in a single (1) process to release the current
         # thread, and take a dedicated CPU core for computation
         documents = self._file_to_documents_work_pool.apply(
-            IngestionHelper.transform_file_into_documents, (file_name, file_data)
+            IngestionHelper.transform_file_into_documents, (file_name, file_data, project_id, user_id)
         )
         logger.info(
             "Transformed file=%s into count=%s documents", file_name, len(documents)
