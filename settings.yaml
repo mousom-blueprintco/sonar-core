@@ -33,22 +33,22 @@ ui:
   delete_all_files_button_enabled: true
 
 llm:
-  mode: llamacpp
-  prompt_style: "mistral"
-  # Should be matching the selected model
-  max_new_tokens: 512
-  context_window: 3900
+  # mode: llamacpp
+  # prompt_style: "mistral"
+  # # Should be matching the selected model
+  # max_new_tokens: 512
+  # context_window: 3900
   tokenizer: mistralai/Mistral-7B-Instruct-v0.2
   temperature: 0.1      # The temperature of the model. Increasing the temperature will make the model answer more creatively. A value of 0.1 would be more factual. (Default: 0.1)
 
 rag:
-  similarity_top_k: 8
+  similarity_top_k: 10
   #This value controls how many "top" documents the RAG returns to use in the context.
   #similarity_value: 0.45
   rerank:
     enabled: true
-    model: cross-encoder/ms-marco-MiniLM-L-6-v2
-    top_n: 6
+    model: cross-encoder/ms-marco-MiniLM-L-12-v2
+    top_n: 8
 
 llamacpp:
   llm_hf_repo_id: TheBloke/Mistral-7B-Instruct-v0.2-GGUF
@@ -61,12 +61,13 @@ llamacpp:
 embedding:
   # Should be matching the value above in most cases
   mode: huggingface
+  count_workers: 10
   ingest_mode: pipeline
   embed_dim: 384 # 384 is for BAAI/bge-small-en-v1.5
 
 huggingface:
   embedding_hf_model_name: BAAI/bge-large-en-v1.5
-  access_token: ${KEY:}
+  access_token: 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
 
 vectorstore:
   database: qdrant
@@ -76,8 +77,8 @@ nodestore:
 
 qdrant:
   # path: local_data/sonar_labs/qdrant
-    url: https://6d650b1f-f6a5-4b54-99b9-70b6d407fe57.us-west-1-0.aws.cloud.qdrant.io:6333
-    api_key: 
+  url: https://ba0211b4-6993-43f5-993e-e2f744805e1d.ap-southeast-1-0.aws.cloud.qdrant.io:6333 
+  api_key: vZ48fWjkR7J97T60I-XorVC4WAo618xl3JxcWmtBqlRVJ-v2jcf7Pg
 
 postgres:
   host: localhost

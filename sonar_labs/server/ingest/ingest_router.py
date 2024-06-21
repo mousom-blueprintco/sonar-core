@@ -66,6 +66,16 @@ async def ingest_file(request: Request, file: UploadFile) -> IngestResponse:
     if file.filename is None:
         raise HTTPException(status_code=400, detail="No file name provided")
 
+    doc_ids_to_delete = [
+        ingested_document.doc_id 
+        for ingested_document in service.list_ingested() 
+        if ingested_document.doc_metadata and ingested_document.doc_metadata.get(file.filename)
+    ]
+    
+    for doc_id in doc_ids_to_delete:
+        service.delete(doc_id)
+    
+    
     ingested_documents = service.ingest_bin_data(file.filename, file.file, project_id, user_id)
     return IngestResponse(object="list", model="sonar-labs", data=ingested_documents)
 
