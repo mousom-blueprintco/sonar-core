@@ -73,18 +73,21 @@ class IngestionHelper:
 
     @staticmethod
     def transform_file_into_documents(
-        file_name: str, file_data: Path, project_id: Optional[str], user_id: Optional[str]
+        file_name: str, file_path: Path, file_id: str, 
+        project_id: Optional[str], user_id: Optional[str], org_id: Optional[str]
     ) -> list[Document]:
-        documents = IngestionHelper._load_file_to_documents(file_name, file_data)
+        documents = IngestionHelper._load_file_to_documents(file_name, file_path)
         for document in documents:
             document.metadata["file_name"] = file_name
+            document.metadata["file_id"] = file_id
             document.metadata["project_id"] = project_id
             document.metadata["user_id"] = user_id
+            document.metadata["org_id"] = org_id
         IngestionHelper._exclude_metadata(documents)
         return documents
 
     @staticmethod
-    def _load_file_to_documents(file_name: str, file_data: Path) -> list[Document]:
+    def _load_file_to_documents(file_name: str, file_path: Path) -> list[Document]:
         logger.debug("Transforming file_name=%s into documents", file_name)
         extension = Path(file_name).suffix
         reader_cls = FILE_READER_CLS.get(extension)
@@ -96,11 +99,11 @@ class IngestionHelper:
             # Read as a plain text
             string_reader = StringIterableReader()
             
-            return string_reader.load_data([file_data.read_text()])
+            return string_reader.load_data([file_path.read_text()])
 
         logger.debug("Specific reader found for extension=%s", extension)
-        # return reader_cls().load_data(file_data)
-        return IngestionHelper._sonar_parser(file_data)
+        # return reader_cls().load_data(file_path)
+        return IngestionHelper._sonar_parser(file_path)
 
     @staticmethod
     def _exclude_metadata(documents: list[Document]) -> None:
@@ -110,7 +113,7 @@ class IngestionHelper:
             # We don't want the Embeddings search to receive this metadata
             document.excluded_embed_metadata_keys = ["doc_id"]
             # We don't want the LLM to receive these metadata in the context
-            document.excluded_llm_metadata_keys = ["doc_id"]
+            document.excluded_llm_metadata_keys = ["doc_id", "file_id", "org_id"]
             
     @staticmethod
     def _get_text_percentage(page) -> float:
@@ -136,7 +139,10 @@ class IngestionHelper:
         client = vision.ImageAnnotatorClient()
         
         pix = page.get_pixmap()
+        # logger.info(f'Image size: width={pix.width}, height={pix.height}')
         img_bytes = pix.tobytes(output="png")
+        # file_size_kb = len(img_bytes) / 1024
+        # logger.info(f'File size: {file_size_kb:.2f} KB')
         image = vision.Image(content=img_bytes)
 
         response = client.text_detection(image=image)
@@ -168,8 +174,8 @@ class IngestionHelper:
         return None
     
     @staticmethod
-    def _sonar_parser(file_data: Path) -> list[Document]:
-        doc = fitz.open(file_data)
+    def _sonar_parser(file_path: Path) -> list[Document]:
+        doc = fitz.open(file_path)
         parsed_documents = []
         
         for page_num, page in enumerate(doc):
@@ -179,7 +185,7 @@ class IngestionHelper:
             
             text_perc = IngestionHelper._get_text_percentage(page)
             print(f"Page {page_num + 1} Text percentage: {text_perc:.2%}")
-            if text_perc < 10.00:
+            if text_perc < 30.00:
                 print(f"Page {page_num + 1} is a fully scanned page - performing OCR using Google Vision")
                 ocr_text = IngestionHelper._perform_ocr_with_google(page)
                 parsed_documents.append(Document(
