@@ -40,11 +40,11 @@ class BaseIngestComponent(abc.ABC):
         self.transformations = transformations
 
     @abc.abstractmethod
-    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+    def ingest(self, file_name: str, file_data: Path, file_id: str, project_id: Optional[str], user_id: Optional[str], org_id: Optional[str]) -> list[Document]:
         pass
 
     @abc.abstractmethod
-    def bulk_ingest(self, files: list[tuple[str, Path]]) -> list[Document]:
+    def bulk_ingest(self, files: list[tuple[str, Path, str]], project_id: Optional[str], user_id: Optional[str], org_id: Optional[str]) -> list[Document]:
         pass
 
     @abc.abstractmethod
@@ -117,20 +117,20 @@ class SimpleIngestComponent(BaseIngestComponentWithIndex):
     ) -> None:
         super().__init__(storage_context, embed_model, transformations, *args, **kwargs)
 
-    def ingest(self, file_name: str, file_data: Path, project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
+    def ingest(self, file_name: str, file_data: Path, file_id: str, project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
         logger.info("Ingesting file_name=%s", file_name)
-        documents = IngestionHelper.transform_file_into_documents(file_name, file_data, project_id, user_id)
+        documents = IngestionHelper.transform_file_into_documents(file_name, file_data, file_id, project_id, user_id)
         logger.info(
             "Transformed file=%s into count=%s documents", file_name, len(documents)
         )
         logger.debug("Saving the documents in the index and doc store")
         return self._save_docs(documents)
 
-    def bulk_ingest(self, files: list[tuple[str, Path]], project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
+    def bulk_ingest(self, files: list[tuple[str, Path, str]], project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
         saved_documents = []
-        for file_name, file_data in files:
+        for file_name, file_path, file_id in files:
             documents = IngestionHelper.transform_file_into_documents(
-                file_name, file_data,
+                file_name, file_path, file_id,
                 project_id, user_id
             )
             saved_documents.extend(self._save_docs(documents))
@@ -176,9 +176,9 @@ class BatchIngestComponent(BaseIngestComponentWithIndex):
             processes=self.count_workers
         )
 
-    def ingest(self, file_name: str, file_data: Path) -> list[Document]:
+    def ingest(self, file_name: str, file_data: Path, file_id: str) -> list[Document]:
         logger.info("Ingesting file_name=%s", file_name)
-        documents = IngestionHelper.transform_file_into_documents(file_name, file_data)
+        documents = IngestionHelper.transform_file_into_documents(file_name, file_data, file_id)
         logger.info(
             "Transformed file=%s into count=%s documents", file_name, len(documents)
         )
@@ -258,7 +258,7 @@ class ParallelizedIngestComponent(BaseIngestComponentWithIndex):
             processes=self.count_workers
         )
 
-    def ingest(self, file_name: str, file_data: Path,  project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
+    def ingest(self, file_name: str, file_data: Path, project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
         logger.info("Ingesting file_name=%s", file_name)
         # Running in a single (1) process to release the current
         # thread, and take a dedicated CPU core for computation
@@ -460,24 +460,24 @@ class PipelineIngestComponent(BaseIngestComponentWithIndex):
         self.node_q.put(("flush", None, None, None))
         self.node_q.join()
 
-    def ingest(self, file_name: str, file_data: Path, project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
-        documents = IngestionHelper.transform_file_into_documents(file_name, file_data, project_id, user_id)
+    def ingest(self, file_name: str, file_data: Path, file_id: str, project_id: Optional[str], user_id: Optional[str], org_id: Optional[str]) -> list[Document]:
+        documents = IngestionHelper.transform_file_into_documents(file_name, file_data, file_id, project_id, user_id, org_id)
         self.doc_q.put(("process", file_name, documents))
         self._flush()
         return documents
 
-    def bulk_ingest(self, files: list[tuple[str, Path]], project_id: Optional[str], user_id: Optional[str]) -> list[Document]:
+    def bulk_ingest(self, files: list[tuple[str, Path, str]], project_id: Optional[str], user_id: Optional[str], org_id: Optional[str]) -> list[Document]:
         docs = []
-        for file_name, file_data in eta(files):
+        for file_name, file_path, file_id in eta(files):
             try:
                 documents = IngestionHelper.transform_file_into_documents(
-                    file_name, file_data,
-                    project_id, user_id
+                    file_name, file_path, file_id,
+                    project_id, user_id, org_id
                 )
                 self.doc_q.put(("process", file_name, documents))
                 docs.extend(documents)
             except Exception:
-                logger.exception(f"Skipping {file_data.name}")
+                logger.exception(f"Skipping {file_path.name}")
         self._flush()
         return docs
 

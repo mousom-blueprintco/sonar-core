@@ -1,6 +1,8 @@
 .venv
 .env
 venv
+local_data
+models
 
 settings-me.yaml
 

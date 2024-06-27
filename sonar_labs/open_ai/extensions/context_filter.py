@@ -11,3 +11,9 @@ class ContextFilter(BaseModel):
     project_id: Optional[str] = Field(
         None, examples=["23"]
     )
+    file_id: Optional[str] = Field(
+        None, examples=["a6feaf2d-101b-4eef-822e-f27e53943a4f"]
+    )
+    org_id: Optional[str] = Field(
+        None, examples=["34"]
+    )
