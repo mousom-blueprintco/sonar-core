@@ -18,7 +18,7 @@ data:
   local_data_folder: local_data/sonar_labs
 
 ui:
-  enabled: true
+  enabled: false
   path: /
   default_chat_system_prompt: >
     You are a helpful, respectful and honest assistant. 
@@ -61,7 +61,7 @@ llamacpp:
 embedding:
   # Should be matching the value above in most cases
   mode: huggingface
-  count_workers: 10
+  count_workers: 8
   ingest_mode: pipeline
   embed_dim: 384 # 384 is for BAAI/bge-small-en-v1.5
 
