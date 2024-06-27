@@ -206,6 +206,34 @@ def delete_ingested(request: Request, doc_id: str) -> None:
     service = request.state.injector.get(IngestService)
     service.delete(doc_id)
     
+@ingest_router.delete("/ingest/delete/{file_id}", tags=["Ingestion"])
+def delete_ingested_doc(request: Request, file_id: str) -> None:
+    """Delete the specified ingested Document.
+
+    The `file_id` can be obtained from the `GET /ingest/list` endpoint.
+    The document will be effectively deleted from your storage context.
+    """
+    
+    project_id = request.headers.get("X-Project-Id", None)
+    user_id = request.headers.get("X-User-Id", None)
+    org_id = request.headers.get("X-Org-Id", None)
+    if not project_id or not user_id or not org_id:
+        raise HTTPException(status_code=400, detail="projectId, userId and orgId are required")
+    
+    service = request.state.injector.get(IngestService)
+    
+    doc_ids_to_delete = [
+        ingested_document.doc_id 
+        for ingested_document in service.list_ingested() 
+        if ingested_document.doc_metadata and ingested_document.doc_metadata.get("file_id") == file_id
+        and ingested_document.doc_metadata.get("project_id") == project_id 
+        and ingested_document.doc_metadata.get("user_id") == user_id
+        and ingested_document.doc_metadata.get("org_id") == org_id
+    ]
+    
+    for doc_id in doc_ids_to_delete:
+            service.delete(doc_id)
+    
 
 @ingest_router.get("/ingest/file/status", tags=["Ingestion"])
 async def ingest_file_status(request: Request) -> IngestCountResponse:
